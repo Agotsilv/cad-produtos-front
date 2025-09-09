@@ -82,6 +82,16 @@ const Products = () => {
       return;
     }
 
+    // Validar se o código é um número válido
+    if (isNaN(Number(formData.code)) || Number(formData.code) <= 0) {
+      toast({
+        title: "Erro",
+        description: "O código deve ser um número válido maior que zero.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (editingProduct) {
       // Atualizar produto
       try {
@@ -117,13 +127,23 @@ const Products = () => {
     } else {
       // Criar novo produto
       try {
+        // Verificar se o código já existe
+        const codeExists = allProducts.some(product => product.CodProd === parseInt(formData.code));
+        if (codeExists) {
+          toast({
+            title: "Erro",
+            description: "Já existe um produto com este código. Escolha outro código.",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const result = await api.post('/produtos', {
           CodProd: parseInt(formData.code),
           DescrProd: formData.name,
         });
 
         console.log(result);
-
 
         if (result.status === 201 || result.status === 200) {
           toast({
@@ -142,7 +162,7 @@ const Products = () => {
         console.error('Erro ao criar produto:', error);
         toast({
           title: "Erro",
-          description: error.response.data.message,
+          description: error.response?.data?.message || "Erro ao criar produto. Tente novamente.",
           variant: "destructive"
         });
       }
@@ -291,9 +311,15 @@ const Products = () => {
                 <Input
                   id="name"
                   value={formData.code}
-                  onChange={(e) => setFormData(prev => ({ ...prev, code: e.target.value }))}
-                  placeholder="Código do produto"
+                  onChange={(e) => {
+                    // Aceitar apenas números
+                    const value = e.target.value.replace(/\D/g, '');
+                    setFormData(prev => ({ ...prev, code: value }));
+                  }}
+                  placeholder="Código do produto (apenas números)"
                   disabled={editingProduct !== null}
+                  type="text"
+                  inputMode="numeric"
                 />
               </div>
 
