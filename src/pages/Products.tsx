@@ -132,7 +132,7 @@ const Products = () => {
         if (codeExists) {
           toast({
             title: "Erro",
-            description: "Já existe um produto com este código. Escolha outro código.",
+            description: "Já existe um produto com este código. por favor, informe outro código.",
             variant: "destructive"
           });
           return;
