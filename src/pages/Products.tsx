@@ -20,6 +20,7 @@ const Products = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [allProducts, setAllProducts] = useState<Product[]>([]); // Lista completa para busca
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -52,6 +53,7 @@ const Products = () => {
 
   const getProducts = async () => {
     try {
+      setIsLoading(true);
       const response = await api.get<Product[]>("/produtos"); // GET no endpoint
       console.log("Dados recebidos:", response.data);
 
@@ -63,6 +65,8 @@ const Products = () => {
     } catch (error) {
       console.error("Erro ao buscar produtos:", error);
       alert("Erro ao carregar produtos. Verifique se o servidor NestJS está rodando.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -385,65 +389,73 @@ const Products = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <Card key={product.CodProd} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-lg">{product.DescrProd}</CardTitle>
-              <CardDescription className="text-sm text-muted-foreground">
-                {product.CodProd || 'Sem código	'}
-              </CardDescription>
-            </CardHeader>
-            <CardFooter className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openEditDialog(product)}
-                className="gap-2"
-              >
-                <Edit className="h-4 w-4" />
-                Editar
-              </Button>
-
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm" className="gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Excluir
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza que deseja excluir o produto "{product.DescrProd}"?
-                      Esta ação não pode ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteProduct(product.CodProd)}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Excluir
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-
-      {products.length === 0 && (
+      {isLoading ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg mb-4">Nenhum produto cadastrado</p>
-          <Button onClick={openAddDialog} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Adicionar primeiro produto
-          </Button>
+          <p className="text-muted-foreground text-lg">Carregando produtos...</p>
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <Card key={product.CodProd} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{product.DescrProd}</CardTitle>
+                  <CardDescription className="text-sm text-muted-foreground">
+                    {product.CodProd || 'Sem código	'}
+                  </CardDescription>
+                </CardHeader>
+                <CardFooter className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => openEditDialog(product)}
+                    className="gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Editar
+                  </Button>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" className="gap-2">
+                        <Trash2 className="h-4 w-4" />
+                        Excluir
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o produto "{product.DescrProd}"?
+                          Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteProduct(product.CodProd)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Excluir
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+
+          {products.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg mb-4">Nenhum produto cadastrado</p>
+              <Button onClick={openAddDialog} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Adicionar primeiro produto
+              </Button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
